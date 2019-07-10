@@ -5,20 +5,26 @@ public class Bulletin {
         parseBulletinCriminals(updates);
     }
 
-
     public String[] getWantedCriminals() {
-        System.out.println(this.wantedCriminals);
         return this.wantedCriminals;
     }
 
     private void parseBulletinCriminals(String updates) {
         String[] names = new String[1];
-        if (updates.contains(",")){
+        if (containsMoreThanOneCriminal(updates)) {
             names = updates.split(",");
         }
-        if (updates.contains(":")){
-            names[0] = updates.substring(updates.indexOf(":")+1).trim();
+        if (containsOnlyOneCriminal(updates)) {
+            names[0] = updates.substring(updates.indexOf(':') + 1).trim();
         }
         this.wantedCriminals = names;
+    }
+
+    private boolean containsMoreThanOneCriminal(String updates) {
+        return updates.contains(",");
+    }
+
+    private boolean containsOnlyOneCriminal(String updates) {
+        return updates.contains(":");
     }
 }
