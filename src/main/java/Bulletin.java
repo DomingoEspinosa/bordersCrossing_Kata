@@ -1,41 +1,63 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Bulletin {
-    private String[] wantedCriminals;
+    private String[] wantedCriminals = new String[1];
     private Map<String, ArrayList<String>> requiredVaccinationsForCountries = new HashMap<String, ArrayList<String>>();
+    private final String VACCINE_REGEX = "(.*require\\s)(.*)(\\s.*vaccination)";
+    private final String COUNTRIES_REGEX = "(Citizens of\\s)(.*)(\\s.*require)";
+
 
     public Bulletin(String updates) {
-        parseBulletinCriminals(updates);
+        parseBulletin(updates);
     }
 
     public String[] getWantedCriminals() {
         return this.wantedCriminals;
     }
 
-    private void parseBulletinCriminals(String updates) {
-        String[] names = new String[1];
+    private void parseBulletin(String updates) {
+        parseCriminals(updates);
+        parseVaccinations(updates);
+    }
+
+    private void parseCriminals(String updates) {
         if (containsMoreThanOneCriminal(updates)) {
-            names = updates.split(",");
+            wantedCriminals = updates.split(",");
         }
         if (containsOnlyOneCriminal(updates)) {
-            names[0] = updates.substring(updates.indexOf(':') + 1).trim();
+            wantedCriminals[0] = updates.substring(updates.indexOf(':') + 1).trim();
         }
-        if (containsVaccinationWord(updates)){
-            String vacination = updates.substring(updates.lastIndexOf("require") + 7, updates.indexOf("vaccination")).trim();
-            ArrayList<String> vaccinations = new ArrayList<String>();
-            vaccinations.add(vacination);
+    }
 
-            String countries = updates.substring(updates.indexOf("of")+2, updates.indexOf("require")).trim();
+    private void parseVaccinations(String updates) {
+        if (containsVaccinationWord(updates)) {
+            ArrayList<String> vaccinations = new ArrayList<String>();
+
+            String vaccine = applyRegexOn(updates, VACCINE_REGEX );
+            vaccinations.add(vaccine);
+
+            String countries = applyRegexOn(updates, COUNTRIES_REGEX);
             String[] listCountries = countries.split(",");
 
-            for (String country: listCountries){
+            for (String country : listCountries) {
                 requiredVaccinationsForCountries.put(country, vaccinations);
             }
 
         }
-        this.wantedCriminals = names;
+    }
+
+    private String applyRegexOn(String updates, String regex) {
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(updates);
+        String result = "";
+        if (matcher.find()){
+            result = matcher.group(2);
+        }
+        return result;
     }
 
     private boolean containsVaccinationWord(String updates) {
